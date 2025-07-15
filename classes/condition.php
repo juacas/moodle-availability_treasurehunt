@@ -18,6 +18,7 @@ namespace availability_treasurehunt;
 
 use context_module;
 use core\exception\moodle_exception;
+use restore_treasurehunt_activity_task;
 
 /**
  * Restricción por Treasurehunt condition
@@ -80,6 +81,7 @@ class condition extends \core_availability\condition {
     
     /**
      * Verifica si la condición se cumple
+     * 
      */
     public function is_available($not, \core_availability\info $info, $grabthelot, $userid) {
         global $CFG;
@@ -99,7 +101,8 @@ class condition extends \core_availability\condition {
         try {
             $userdata = treasurehunt_get_user_group_and_road($userid, $this->treasurehunt, false);
         } catch (moodle_exception $e) {
-            // User is not in a group or in more than one group.
+            // User is not in a group or in more than one group (for a teams treassurehunt).
+            // Nevertheless, a incorrect situation.
             return false;
         }
         $groupid = $userdata->groupid;
@@ -109,19 +112,32 @@ class condition extends \core_availability\condition {
         
         switch ($this->conditiontype) {
             case self::TYPE_STAGES:
+                // Number of stages solved.
+                $lastsolved = treasurehunt_query_last_successful_attempt($userid, $groupid, $roadid);
+                $current_stage = $lastsolved->position;
+                $available = $current_stage >= $this->requiredvalue;
                 break;
                 
             case self::TYPE_TIME:
+                // Time played.
+                $playtime = treasurehunt_get_hunt_duration($cmid, $userid, $groupid);
+                // Convert in minutes.
+                $playtime = $playtime / 60000;
+                $available = $playtime >= $this->requiredvalue;
                 break;
                 
             case self::TYPE_COMPLETION:
+                // All stages.
+                $available = treasurehunt_check_if_user_has_finished($userid, $groupid, $roadid);
                 break;
                 
             case self::TYPE_CURRENT_STAGE:
                 // Get lastsolved stage.
                 $lastsolved = treasurehunt_query_last_successful_attempt($userid, $groupid, $roadid);
-                $current_stage = $lastsolved->stageid;
-                $available = $current_stage == $this->stageid;
+                if ($lastsolved) {
+                    $current_stage = $lastsolved->stageid;
+                    $available = $current_stage == $this->stageid;
+                }
                 break;
         }
         
@@ -130,87 +146,6 @@ class condition extends \core_availability\condition {
         }
         
         return $available;
-    }
-    
-    /**
-     * Obtiene el progreso del usuario en el treasurehunt
-     */
-    protected function get_user_progress($userid) {
-        global $DB;
-        
-        $progress = new \stdClass();
-        $progress->stages_completed = 0;
-        $progress->time_played = 0;
-        $progress->is_completed = false;
-        
-        // Obtener intentos del usuario
-        $treasurehunt = $DB->get_record('treasurehunt', ['id' => $this->treasurehuntid], '*', MUST_EXIST);
-        $userdata = treasurehunt_get_user_group_and_road($userid, $treasurehunt, $cm->id);
-        $groupid = $userdata->groupid;
-        $roadid = $userdata->roadid;
-
-        $attempts = treasurehunt_get_user_attempt_history($groupid, $userid,$roadid);
-        
-        if (!empty($attempts)) {
-            foreach ($attempts as $attempt) {
-                // Contar etapas completadas
-                if ($attempt->stageid && $attempt->success) {
-                    $progress->stages_completed++;
-                }
-                
-                // Sumar tiempo jugado
-                if ($attempt->timecreated && $attempt->timemodified) {
-                    $progress->time_played += ($attempt->timemodified - $attempt->timecreated);
-                }
-            }
-            
-            // Verificar si está completado
-            $treasurehunt = $DB->get_record('treasurehunt', array('id' => $this->treasurehuntid));
-            if ($treasurehunt) {
-                $total_stages = $DB->count_records('treasurehunt_stages', 
-                    array('treasurehuntid' => $this->treasurehuntid));
-                $progress->is_completed = ($progress->stages_completed >= $total_stages);
-            }
-        }
-        
-        return $progress;
-    }
-    
-   
-    /**
-     * Obtiene el stage actual del usuario (último stage no completado)
-     */
-    protected function get_user_current_stage($userid) {
-        global $DB;
-        
-        // Obtener todas las etapas del treasurehunt ordenadas
-        $stages = $DB->get_records('treasurehunt_stages', 
-            array('treasurehuntid' => $this->treasurehuntid), 'sortorder ASC');
-        
-        if (empty($stages)) {
-            return 0;
-        }
-        
-        // Obtener etapas completadas por el usuario
-        $completed_stages = $DB->get_records_sql(
-            "SELECT DISTINCT ta.stageid 
-             FROM {treasurehunt_attempts} ta 
-             WHERE ta.treasurehuntid = ? AND ta.userid = ? AND ta.success = 1",
-            array($this->treasurehuntid, $userid)
-        );
-        
-        $completed_stage_ids = array_keys($completed_stages);
-        
-        // Encontrar el primer stage no completado
-        foreach ($stages as $stage) {
-            if (!in_array($stage->id, $completed_stage_ids)) {
-                return $stage->id;
-            }
-        }
-        
-        // Si todos están completados, devolver el último
-        $last_stage = end($stages);
-        return $last_stage ? $last_stage->id : 0;
     }
     
     /**
@@ -236,8 +171,9 @@ class condition extends \core_availability\condition {
                 break;
                 
             case self::TYPE_CURRENT_STAGE:
-                $stage_name = $this->get_stage_name($this->stageid);
-                $description = get_string('requires_current_stage', 'availability_treasurehunt', $stage_name);
+                $stage = $this->get_stage($this->stageid);
+                $description = get_string('requires_current_stage', 'availability_treasurehunt',
+                                $stage );
                 break;
                 
             default:
@@ -275,28 +211,69 @@ class condition extends \core_availability\condition {
         
         return get_string('missing_stage', 'availability_treasurehunt');
     }
-    
+    /**
+     * Obtiene la posicion de un stage en su camino.
+     */
+    protected function get_stage($stageid) {
+        return treasurehunt_get_stage($stageid);
+    }
     /**
      * Obtiene información de debug
      */
     protected function get_debug_string() {
         return 'treasurehunt#' . $this->treasurehuntid . ' ' . $this->conditiontype . ':' . $this->requiredvalue;
     }
-    
-    /**
-     * Actualiza después de restaurar
-     */
+
     public function update_after_restore($restoreid, $courseid, \base_logger $logger, $name) {
         global $DB;
-        
+        if (!$this->treasurehuntid) {
+            return false;
+        }
         $rec = \restore_dbops::get_backup_ids_record($restoreid, 'treasurehunt', $this->treasurehuntid);
-        if ($rec && $rec->newitemid) {
-            $this->treasurehuntid = $rec->newitemid;
+        if (!$rec || !$rec->newitemid) {
+            // If we are on the same course (e.g. duplicate) then we can just
+            // use the existing one.
+            if ($DB->record_exists('treasurehunt',
+                    array('id' => $this->treasurehuntid, 'course' => $courseid))) {
+                return false;
+            }
+            // Otherwise it's a warning.
+            $this->treasurehuntid = -1;
+            $logger->process('Restored item (' . $name .
+                    ') has availability condition on treasurehunt that was not restored',
+                    \backup::LOG_WARNING);
+        } else {
+            $this->treasurehuntid = (int)$rec->newitemid;
+        }
+        // Re-map Stage TODO.
+        $rec = \restore_dbops::get_backup_ids_record($restoreid, 'treasurehunt_stages', $this->treasurehuntid);
+        if (!$rec || !$rec->newitemid) {
+            // If we are on the same course (e.g. duplicate) then we can just
+            // use the existing one.
+            if ($DB->record_exists('treasurehunt_stages',
+                    array('id' => $this->stageid))) {
+                return false;
+            }
+            // Otherwise it's a warning.
+            $this->stageid = -1;
+            $logger->process('Restored item (' . $name .
+                    ') has availability condition on a stage that was not restored',
+                    \backup::LOG_WARNING);
+        } else {
+            $this->stageid = (int)$rec->newitemid;
+        }
+        return true;
+    }
+
+    public function update_dependency_id($table, $oldid, $newid) {
+        if ($table === 'treasurehunt' && (int)$this->treasurehuntid === (int)$oldid) {
+            $this->treasurehuntid = $newid;
             return true;
         } else {
             return false;
         }
     }
+    
     
     /**
      * Incluye JavaScript para el formulario
@@ -333,7 +310,7 @@ class condition extends \core_availability\condition {
         
         foreach ($stages as $stage) {
             $name = $stage->name ? $stage->name : get_string('stage', 'availability_treasurehunt') . ' #' . $stage->id;
-            $options[$stage->id] = $name;
+            $options[$stage->id] = $stage->roadname . "/" . $name;
         }
         
         return $options;

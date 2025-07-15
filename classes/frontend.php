@@ -54,7 +54,7 @@ class frontend extends \core_availability\frontend {
      */
     protected function get_javascript_init_params($course, \cm_info $cm = null, \section_info $section = null) {
         $treasurehunts = condition::get_treasurehunt_options($course->id);
-        return [$cm->id, self::convert_associative_array_for_js($treasurehunts, 'id', 'display')];
+        return [$cm ? $cm->id : null, self::convert_associative_array_for_js($treasurehunts, 'id', 'display')];
     }
     
     /**

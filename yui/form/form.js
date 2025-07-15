@@ -13,7 +13,7 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
         var cmid = this.cmid;
         var html = '<label><span class="p-r-1">' + M.util.get_string('select_treasurehunt', 'availability_treasurehunt') + '</span>';
         html += '<select name="treasurehuntid" class="custom-select">';
-        html += '<option value="">-- ' + M.util.get_string('choose', 'core') + ' --</option>';
+        html += '<option value="">' + M.util.get_string('choosedots','moodle') + '</option>';
         
         for (var k in this.treasurehunts) {
             html += '<option value="' + this.treasurehunts[k].id + '">' + this.treasurehunts[k].display + '</option>';
@@ -29,9 +29,9 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
         html += '</select></label>';
         html += '<br><label><span class="p-r-1">' + M.util.get_string('minimum_stages', 'availability_treasurehunt') + '</span>';
         html += '<input type="number" name="requiredvalue" min="0" class="form-control" style="width: 100px; display: inline-block;"></label>';
-        html += '<br><label><span class="p-r-1">' + M.util.get_string('select_stage', 'availability_treasurehunt') + '</span>';
-        html += '<select name="stageid" class="custom-select" style="display: none;">';
-        html += '<option value="">-- ' + M.util.get_string('choose', 'moodle') + ' --</option>';
+        html += '<label><span class="p-r-1">' + M.util.get_string('select_stage', 'availability_treasurehunt') + '</span>';
+        html += '<select name="stageid" class="custom-select" style="display: inline-block;">';
+        html += '<option value="">' + M.util.get_string('choosedots','moodle') + '</option>';
         html += '</select></label>';
         
         var node = Y.Node.create('<span class="form-group">' + html + '</span>');
@@ -41,7 +41,8 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
         var conditionSelect = node.one('select[name=conditiontype]');
         var valueInput = node.one('input[name=requiredvalue]');
         var stageSelect = node.one('select[name=stageid]');
-        
+        var stageLabel = stageSelect.get('parentNode').one('span');
+       
         // Configurar valores iniciales
         if (json.treasurehuntid) {
             treasurehuntSelect.set('value', json.treasurehuntid);
@@ -67,7 +68,7 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
                         success: function(id, o) {
                             var stages = Y.JSON.parse(o.responseText);
                             stageSelect.get('childNodes').remove();
-                            stageSelect.append('<option value="">-- ' + M.util.get_string('choose', 'moodle') + ' --</option>');
+                            stageSelect.append('<option value="">' + M.util.get_string('choosedots', 'moodle') + '</option>');
                             
                             for (var stageId in stages) {
                                 stageSelect.append('<option value="' + stageId + '">' + stages[stageId] + '</option>');
@@ -75,6 +76,7 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
                             
                             if (json.stageid) {
                                 stageSelect.set('value', json.stageid);
+                                M.core_availability.form.update();
                             }
                         }
                     }
@@ -91,19 +93,24 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
                 valueInput.setStyle('display', 'inline-block');
                 valueLabel.setContent(M.util.get_string('minimum_stages', 'availability_treasurehunt'));
                 stageSelect.setStyle('display', 'none');
+                stageLabel.setContent('');
             } else if (type === 'time') {
                 valueInput.setStyle('display', 'inline-block');
                 valueLabel.setContent(M.util.get_string('minimum_time', 'availability_treasurehunt'));
                 stageSelect.setStyle('display', 'none');
+                stageLabel.setContent('');
+
             } else if (type === 'current_stage') {
                 valueInput.setStyle('display', 'none');
                 valueLabel.setContent('');
+                stageLabel.setContent(M.util.get_string('select_stage', 'availability_treasurehunt'));
                 stageSelect.setStyle('display', 'inline-block');
                 loadStages();
             } else {
                 valueInput.setStyle('display', 'none');
                 valueLabel.setContent('');
                 stageSelect.setStyle('display', 'none');
+                stageLabel.setContent('');
             }
         };
         
