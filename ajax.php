@@ -28,7 +28,7 @@ require_once($CFG->dirroot . '/mod/treasurehunt/locallib.php');
 $action = required_param('action', PARAM_TEXT);
 $treasurehuntid = required_param('treasurehuntid', PARAM_INT);
 $id = $treasurehuntid;
-$cm = get_coursemodule_from_instance('treasurehunt',$treasurehuntid, 0, false, MUST_EXIST);
+$cm = get_coursemodule_from_instance('treasurehunt', $treasurehuntid, 0, false, MUST_EXIST);
 
 $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 require_login($course, false, $cm);
@@ -38,15 +38,11 @@ $treasurehuntid = $cm->instance;
 
 switch ($action) {
     case 'get_stages':
-        
-       // $roads = treasurehunt_get_roads($treasurehuntid);
-        
         $stages = \availability_treasurehunt\condition::get_stages_options($treasurehuntid, $context);
-        
         header('Content-Type: application/json');
         echo json_encode($stages);
         break;
-        
+
     default:
         throw new moodle_exception('invalidaction');
 }

@@ -24,26 +24,27 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-$string['pluginname'] = 'Restricción por Treasurehunt';
-$string['title'] = 'Treasurehunt';
-$string['description'] = 'Restringir el acceso basado en el progreso en actividades Treasurehunt';
-$string['requires_treasurehunt'] = 'Requiere progreso en Treasurehunt';
-$string['requires_stages'] = 'Requiere {$a} etapas completadas';
-$string['requires_time'] = 'Requiere {$a} minutos de tiempo de juego';
-$string['requires_completion'] = 'Requiere completar el Treasurehunt';
-$string['select_treasurehunt'] = 'Seleccionar Treasurehunt';
+
 $string['condition_type'] = 'Tipo de condición';
-$string['stages_completed'] = 'Etapas completadas';
-$string['time_played'] = 'Tiempo jugado (minutos)';
-$string['full_completion'] = 'Completado totalmente';
 $string['current_stage'] = 'En etapa específica';
+$string['description'] = 'Restringir el acceso basado en el progreso en actividades Caza del Tesoro';
+$string['error_selectstage'] = 'Debe seleccionar una etapa';
+$string['error_selecttreasurehunt'] = 'Debe seleccionar una actividad Caza del Tesoro';
+$string['error_setcondition'] = 'Debe establecer una condición';
+$string['full_completion'] = 'Completado totalmente';
 $string['minimum_stages'] = 'Mínimo de etapas';
 $string['minimum_time'] = 'Tiempo mínimo (minutos)';
-$string['select_stage'] = 'Seleccionar etapa';
-$string['requires_current_stage'] = 'Requiere estar en la etapa número {$a->position} de la ruta "{$a->roadname}"';
-$string['stage'] = 'Etapa';
 $string['missing_stage'] = 'Etapa no encontrada';
-$string['error_selecttreasurehunt'] = 'Debe seleccionar una actividad Treasurehunt';
-$string['error_setcondition'] = 'Debe establecer una condición';
-$string['error_selectstage'] = 'Debe seleccionar una etapa';
-$string['missing_treasurehunt'] = 'Actividad Treasurehunt no encontrada';
+$string['missing_treasurehunt'] = 'Actividad Caza del Tesoro no encontrada';
+$string['pluginname'] = 'Restricción por Caza del Tesoro';
+$string['requires_completion'] = 'Requiere completar el Caza del Tesoro';
+$string['requires_current_stage'] = 'Requiere estar en la etapa número {$a->position} de la ruta "{$a->roadname}"';
+$string['requires_stages'] = 'Requiere {$a} etapas completadas';
+$string['requires_time'] = 'Requiere {$a} minutos de tiempo de juego';
+$string['requires_treasurehunt'] = 'Requiere progreso en Caza del Tesoro';
+$string['select_stage'] = 'Seleccionar etapa';
+$string['select_treasurehunt'] = 'Seleccionar Caza del Tesoro';
+$string['stage'] = 'Etapa';
+$string['stages_completed'] = 'Etapas completadas';
+$string['time_played'] = 'Tiempo jugado (minutos)';
+$string['title'] = 'Caza del tesoro';

@@ -14,20 +14,25 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace availability_treasurehunt;
+
 /**
- * Version information for availability_treasurehunt
+ * Tests for Restriction by Treasurehunt
  *
  * @package    availability_treasurehunt
- * @copyright  2025 Juan Pablo de Castro <juan.pablo.de.castro@gmail.com>
+ * @category   test
+ * @copyright  2025 YOUR NAME <your@email.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+final class lib_test extends \advanced_testcase {
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component    = 'availability_treasurehunt';
-$plugin->release      = '1.0';
-$plugin->version      = 2025071600;
-$plugin->requires     = 2024100700;
-$plugin->supported    = [405, 500];
-$plugin->maturity     = MATURITY_STABLE;
-$plugin->dependencies = ['mod_treasurehunt' => 2020061500];
+    /**
+     * Example of a unittest
+     *
+     * TODO change the 'covers' tag to the class or function in the plugin.
+     * @covers ::get_config
+     */
+    public function test_plugin_installed(): void {
+        $this->assertNotEmpty(get_config('availability_treasurehunt', 'version'));
+    }
+}

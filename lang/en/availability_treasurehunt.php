@@ -24,26 +24,27 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-$string['pluginname'] = 'Restriction by Treasurehunt';
-$string['title'] = 'Treasurehunt';
-$string['description'] = 'Restrict access based on progress in Treasurehunt activities';
-$string['requires_treasurehunt'] = 'Requires progress in Treasurehunt';
-$string['requires_stages'] = 'Requires {$a} completed stages';
-$string['requires_time'] = 'Requires {$a} minutes of game time';
-$string['requires_completion'] = 'Requires Treasurehunt completion';
-$string['select_treasurehunt'] = 'Select Treasurehunt';
+
 $string['condition_type'] = 'Condition type';
-$string['stages_completed'] = 'Stages completed';
-$string['time_played'] = 'Time played (minutes)';
-$string['full_completion'] = 'Fully completed';
 $string['current_stage'] = 'At specific stage';
-$string['minimum_stages'] = 'Minimum stages';
-$string['minimum_time'] = 'Minimum time (minutes)';
-$string['select_stage'] = 'Select stage';
-$string['requires_current_stage'] = 'Requires being at stage number {$a->position} of "{$a->roadname}"';
-$string['stage'] = 'Stage';
-$string['missing_stage'] = 'Stage not found';
+$string['description'] = 'Restrict access based on progress in Treasurehunt activities';
+$string['error_selectstage'] = 'You must select a stage';
 $string['error_selecttreasurehunt'] = 'You must select a Treasurehunt activity';
 $string['error_setcondition'] = 'You must set a condition';
-$string['error_selectstage'] = 'You must select a stage';
+$string['full_completion'] = 'Fully completed';
+$string['minimum_stages'] = 'Minimum stages';
+$string['minimum_time'] = 'Minimum time (minutes)';
+$string['missing_stage'] = 'Stage not found';
 $string['missing_treasurehunt'] = 'Treasurehunt activity not found';
+$string['pluginname'] = 'Restriction by Treasurehunt';
+$string['requires_completion'] = 'Requires Treasurehunt completion';
+$string['requires_current_stage'] = 'Requires being at stage number {$a->position} of "{$a->roadname}"';
+$string['requires_stages'] = 'Requires {$a} completed stages';
+$string['requires_time'] = 'Requires {$a} minutes of game time';
+$string['requires_treasurehunt'] = 'Requires progress in Treasurehunt';
+$string['select_stage'] = 'Select stage';
+$string['select_treasurehunt'] = 'Select Treasurehunt';
+$string['stage'] = 'Stage';
+$string['stages_completed'] = 'Stages completed';
+$string['time_played'] = 'Time played (minutes)';
+$string['title'] = 'Treasurehunt';

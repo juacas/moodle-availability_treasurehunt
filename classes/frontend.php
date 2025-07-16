@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace availability_treasurehunt;
-defined('MOODLE_INTERNAL') || die();
 /**
  * Restricción por Treasurehunt frontend
  *
@@ -24,18 +22,18 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace availability_treasurehunt;
-
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * User interface for configuring conditions.
+ */
 class frontend extends \core_availability\frontend {
-    
+
     /**
      * Obtiene las cadenas de JavaScript
      */
     protected function get_javascript_strings() {
-        return array(
+        return [
             'select_treasurehunt',
-            'condition_type', 
+            'condition_type',
             'stages_completed',
             'time_played',
             'full_completion',
@@ -45,25 +43,25 @@ class frontend extends \core_availability\frontend {
             'select_stage',
             'error_selecttreasurehunt',
             'error_setcondition',
-            'error_selectstage'
-        );
+            'error_selectstage',
+        ];
     }
-    
+
     /**
      * Obtiene los parámetros de JavaScript
      */
-    protected function get_javascript_init_params($course, \cm_info $cm = null, \section_info $section = null) {
+    protected function get_javascript_init_params($course, ?\cm_info $cm = null, ?\section_info $section = null) {
         $treasurehunts = condition::get_treasurehunt_options($course->id);
         return [$cm ? $cm->id : null, self::convert_associative_array_for_js($treasurehunts, 'id', 'display')];
     }
-    
+
     /**
      * Permite usar en módulos de curso
      */
-    protected function allow_add($course, \cm_info $cm = null, \section_info $section = null) {
+    protected function allow_add($course, ?\cm_info $cm = null, ?\section_info $section = null) {
         global $DB;
-        
-        // Solo permitir si hay actividades treasurehunt en el curso
-        return $DB->record_exists('treasurehunt', array('course' => $course->id));
+
+        // Solo permitir si hay actividades treasurehunt en el curso.
+        return $DB->record_exists('treasurehunt', ['course' => $course->id]);
     }
 }
