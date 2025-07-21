@@ -104,7 +104,7 @@ class condition extends \core_availability\condition {
         global $DB;
         $course = $info->get_course();
         // Obtener intentos del usuario.
-        if ($this->treasurehunt === null ) {
+        if ($this->treasurehunt === null) {
             $this->treasurehunt = $DB->get_record('treasurehunt', ['id' => $this->treasurehuntid], '*', IGNORE_MISSING);
             if ($this->treasurehunt == false) { // Maybe, activity was deleted.
                 return false;
@@ -184,8 +184,11 @@ class condition extends \core_availability\condition {
 
             case self::TYPE_CURRENT_STAGE:
                 $stage = $this->get_stage($this->stageid);
-                $description = get_string('requires_current_stage', 'availability_treasurehunt',
-                                $stage );
+                $description = get_string(
+                    'requires_current_stage',
+                    'availability_treasurehunt',
+                    $stage
+                );
                 break;
 
             default:
@@ -204,8 +207,11 @@ class condition extends \core_availability\condition {
      * @return string Text value
      */
     public static function get_description_callback_value(
-            \course_modinfo $modinfo, \context $context, array $params): string {
-        if (count($params) !== 1 ) {
+        \course_modinfo $modinfo,
+        \context $context,
+        array $params
+    ): string {
+        if (count($params) !== 1) {
             return '<!-- Invalid treasurehunt callback -->';
         }
         return format_text($params[0]);
@@ -252,15 +258,21 @@ class condition extends \core_availability\condition {
         if (!$rec || !$rec->newitemid) {
             // If we are on the same course (e.g. duplicate) then we can just
             // use the existing one.
-            if ($DB->record_exists('treasurehunt',
-                    ['id' => $this->treasurehuntid, 'course' => $courseid])) {
+            if (
+                $DB->record_exists(
+                    'treasurehunt',
+                    ['id' => $this->treasurehuntid, 'course' => $courseid]
+                )
+            ) {
                 return false;
             }
             // Otherwise it's a warning.
             $this->treasurehuntid = -1;
-            $logger->process('Restored item (' . $name .
+            $logger->process(
+                'Restored item (' . $name .
                     ') has availability condition on treasurehunt that was not restored',
-                    \backup::LOG_WARNING);
+                \backup::LOG_WARNING
+            );
         } else {
             $this->treasurehuntid = (int)$rec->newitemid;
         }
@@ -269,15 +281,16 @@ class condition extends \core_availability\condition {
         if (!$rec || !$rec->newitemid) {
             // If we are on the same course (e.g. duplicate) then we can just
             // use the existing one.
-            if ($DB->record_exists('treasurehunt_stages',
-                    ['id' => $this->stageid])) {
+            if ($DB->record_exists('treasurehunt_stages', ['id' => $this->stageid])) {
                 return false;
             }
             // Otherwise it's a warning.
             $this->stageid = -1;
-            $logger->process('Restored item (' . $name .
+            $logger->process(
+                'Restored item (' . $name .
                     ') has availability condition on a stage that was not restored',
-                    \backup::LOG_WARNING);
+                \backup::LOG_WARNING
+            );
         } else {
             $this->stageid = (int)$rec->newitemid;
         }
@@ -298,7 +311,6 @@ class condition extends \core_availability\condition {
             return false;
         }
     }
-
 
     /**
      * Incluye JavaScript para el formulario
