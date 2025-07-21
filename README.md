@@ -2,14 +2,20 @@
 
 This plugin allows restricting access to Moodle resources and activities based on user progress in Treasurehunt activities.
 
+See [https://moodle.org/plugins/mod_treasurehunt](https://moodle.org/plugins/mod_treasurehunt)
+
 ## Features
 
-- **Completed stages**: Require a minimum number of completed stages
-- **Playing time**: Require a minimum time played
-- **Full completion**: Require the treasurehunt to be completely finished
+- **Completed stages**: Require a minimum number of completed stages. User need to discover the geometry of at least N stages.
+- **Playing time**: Require a minimum time played.
+- **Full completion**: Require the treasurehunt to be completely finished. It is unlinked to activity completion.
+- **Current stage: the user must be exactly in a precise stage (position discovered).
 
 ## Installation
 
+- Install from Moodle's repository.
+
+- Install from Github repository:
 1. Extract to `/availability/condition/treasurehunt/`
 2. Visit the administration page to install
 3. The plugin will be available in access restrictions
@@ -19,14 +25,16 @@ This plugin allows restricting access to Moodle resources and activities based o
 1. Edit any resource or activity
 2. In "Restrict access", add a new restriction
 3. Select "Treasurehunt"
-4. Configure the desired condition
+4. Configure the desired condition and parameters
 5. Save changes
+
+![Availability form](pix/availabilitytreasurehuntUI.png)
 
 ## Requirements
 
-- Moodle 3.9+
+- Moodle 4.1+
 - mod_treasurehunt plugin installed
 
 ## Author
 
-Plugin developed for integration with mod_treasurehunt
+(c) 2025 Juan Pablo de Castro <juan.pablo.de.castro@gmail.com>
