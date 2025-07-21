@@ -90,7 +90,19 @@ function treasurehunt_get_activity_info_from_cm($cm) {
  * @return array(bool, &object) true if found, conditions section
  */
 function treasurehunt_check_stage_restriction($availability, $stageid) {
-    // Search terasurehunt section.
+    // Search only condition at root. This is a very common scenario.
+    if (isset($availability->c[0])) {
+        if (
+            $availability->op =="&" &&
+            count($availability->c) == 1 &&
+            isset($availability->c[0]->type) &&
+            $availability->c[0]->type == "treasurehunt" &&
+            $availability->c[0]->stageid == $stageid
+            ) {
+                return [ true, null];
+            }
+    }
+    // Search for a group of availability_treasurehunt section.
     $conditionsection = &treasurehunt_get_treasurehunt_availability_section($availability);
     if ($stageid) {
         // Search conditions.
@@ -118,8 +130,8 @@ function treasurehunt_check_stage_restriction($availability, $stageid) {
 function &treasurehunt_get_treasurehunt_availability_section($availability) {
     // Search terasurehunt section.
     foreach ($availability->c as $conditionsection) {
-        // Check if its an "or" section at root.
-        if ($conditionsection->op == '|') {
+        // Check if there is an "or" section at root.
+        if (isset($conditionsection->op) && $conditionsection->op == '|') {
             return $conditionsection;
         }
     }
@@ -195,6 +207,21 @@ function treasurehunt_remove_restriction($cm, $stage) {
     }
 
     $availability = json_decode($cm->availability, false);
+     // Search if only condition at root.
+    if (isset($availability->c[0])) {
+        if (
+            $availability->op =="&" &&
+            count($availability->c) == 1 &&
+            isset($availability->c[0]->type) &&
+            $availability->c[0]->type == "treasurehunt" &&
+            $availability->c[0]->stageid == $stage->id
+            ) {
+                // Empty condition list.
+                $availability->c = [];
+                $availability->showc = [];
+                return $availability;
+            }
+    }
 
     // Find treasurehutn section.
     $trconditions = treasurehunt_get_treasurehunt_availability_section($availability);
