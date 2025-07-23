@@ -51,22 +51,23 @@ class condition extends \core_availability\condition {
      */
     const TYPE_CURRENT_STAGE = 'current_stage';
 
-    /** @var int ID de la actividad treasurehunt */
+    /** @var int treasurehunt ID */
     protected $treasurehuntid;
     /** @var \stdClass record of the actvity */
     protected $treasurehunt = null;
 
-    /** @var string Tipo de condición */
+    /** @var string condition type name */
     protected $conditiontype;
 
     /** @var int Valor requerido */
     protected $requiredvalue;
 
-    /** @var int ID del stage específico (para condición current_stage) */
+    /** @var int stage ID */
     protected $stageid;
 
     /**
      * Constructor
+     * @param \stdClass Structure with the condition data.
      */
     public function __construct($structure) {
         $this->treasurehuntid = $structure->treasurehuntid;
@@ -95,7 +96,11 @@ class condition extends \core_availability\condition {
 
     /**
      * Verifica si la condición se cumple
-     *
+     * @param bool $not invert the condition
+     * @param \core_availability\info $info course information
+     * @param bool $grabthelot if true, grab the lot
+     * @param int $userid user ID
+     * @return bool true if the condition is met, false otherwise
      */
     public function is_available($not, \core_availability\info $info, $grabthelot, $userid) {
         global $CFG;
@@ -161,7 +166,11 @@ class condition extends \core_availability\condition {
     }
 
     /**
-     * Obtiene la descripción de la condición
+     * Get the description of the condition.
+     * @param bool $full if true, return full description
+     * @param bool $not invert the condition
+     * @param \core_availability\info $info course information
+     * @return string Text description
      */
     public function get_description($full, $not, \core_availability\info $info) {
         global $DB;
@@ -217,7 +226,9 @@ class condition extends \core_availability\condition {
         return format_text($params[0]);
     }
     /**
-     * Obtiene el nombre de un stage
+     * Get the name of a stage.
+     * @param int $stageid Stage ID
+     * @return string Stage name or a default string if not found.
      */
     protected function get_stage_name($stageid) {
         global $DB;
@@ -230,13 +241,15 @@ class condition extends \core_availability\condition {
         return get_string('missing_stage', 'availability_treasurehunt');
     }
     /**
-     * Obtiene la posicion de un stage en su camino.
+     * Get the stage object in its road.
+     * @param int $stageid Stage ID
+     * @return \stdClass Stage record
      */
     protected function get_stage($stageid) {
         return treasurehunt_get_stage($stageid);
     }
     /**
-     * Obtiene información de debug
+     * Gets debug information.
      */
     protected function get_debug_string() {
         return 'treasurehunt#' . $this->treasurehuntid . ' ' . $this->conditiontype . ':' . $this->requiredvalue;
@@ -321,7 +334,9 @@ class condition extends \core_availability\condition {
     }
 
     /**
-     * Obtiene las actividades treasurehunt disponibles
+     * Gets the available treasurehunt activities in a course.
+     * @param int $courseid Course ID
+     * @return array Array of treasurehunt options with instance ID as key and name as value
      */
     public static function get_treasurehunt_options($courseid) {
         global $DB;
@@ -336,7 +351,10 @@ class condition extends \core_availability\condition {
     }
 
     /**
-     * Obtiene los stages de un treasurehunt específico
+     * Gets the stages of a specific treasurehunt.
+     * @param int $treasurehuntid Treasurehunt ID
+     * @param \context $context Context of the treasurehunt
+     * @return array Array of stage options with stage ID as key and roadname/name as
      */
     public static function get_stages_options($treasurehuntid, $context) {
         global $DB;

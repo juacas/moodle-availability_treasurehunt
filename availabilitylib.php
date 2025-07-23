@@ -93,14 +93,14 @@ function treasurehunt_check_stage_restriction($availability, $stageid) {
     // Search only condition at root. This is a very common scenario.
     if (isset($availability->c[0])) {
         if (
-            $availability->op =="&" &&
+            $availability->op == "&" &&
             count($availability->c) == 1 &&
             isset($availability->c[0]->type) &&
             $availability->c[0]->type == "treasurehunt" &&
             $availability->c[0]->stageid == $stageid
-            ) {
+        ) {
                 return [ true, null];
-            }
+        }
     }
     // Search for a group of availability_treasurehunt section.
     $conditionsection = &treasurehunt_get_treasurehunt_availability_section($availability);
@@ -142,7 +142,8 @@ function &treasurehunt_get_treasurehunt_availability_section($availability) {
  * Añade una restricción treasurehunt a las restricciones existentes
  *
  * @param course_modinfo $cm course module.
- * @param stdClass $stageid record etapa.
+ * @param stdClass $stage record etapa.
+ * @param int $treasurehuntid ID del treasurehunt.
  * @param bool $replace Si reemplazar todas las restricciones existentes.
  * @return stdClass  availability structure.
  */
@@ -169,7 +170,6 @@ function treasurehunt_add_restriction($cm, $stage, $treasurehuntid, $replace = f
     if ($found === false) {
         // Añadir la nueva restricción.
         if ($trsection === null) {
-
             // Place treasureavailabilities in a labeled section.
             // Note: label is not an official field.
             $trsection = (object) [
@@ -210,17 +210,17 @@ function treasurehunt_remove_restriction($cm, $stage) {
      // Search if only condition at root.
     if (isset($availability->c[0])) {
         if (
-            $availability->op =="&" &&
+            $availability->op == "&" &&
             count($availability->c) == 1 &&
             isset($availability->c[0]->type) &&
             $availability->c[0]->type == "treasurehunt" &&
             $availability->c[0]->stageid == $stage->id
-            ) {
+        ) {
                 // Empty condition list.
                 $availability->c = [];
                 $availability->showc = [];
                 return $availability;
-            }
+        }
     }
 
     // Find treasurehutn section.

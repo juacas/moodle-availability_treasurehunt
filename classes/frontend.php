@@ -48,7 +48,11 @@ class frontend extends \core_availability\frontend {
     }
 
     /**
-     * Obtiene los parámetros de JavaScript
+     * Get the JavaScript parameters.
+     * @param \stdClass $course Cuourse object.
+     * @param \cm_info|null $cm Course module information.
+     * @param \section_info|null $section Section information.
+     * @return array Array of JavaScript initialization parameters.
      */
     protected function get_javascript_init_params($course, ?\cm_info $cm = null, ?\section_info $section = null) {
         $treasurehunts = condition::get_treasurehunt_options($course->id);
@@ -56,12 +60,15 @@ class frontend extends \core_availability\frontend {
     }
 
     /**
-     * Permite usar en módulos de curso
+     * Allows the condition to be used in course modules.
+     * @param \stdClass $course Course object.
+     * @param \cm_info|null $cm Course module information.
+     * @param \section_info|null $section Section information.
+     * @return bool True if the condition can be added, false otherwise.
      */
     protected function allow_add($course, ?\cm_info $cm = null, ?\section_info $section = null) {
         global $DB;
-
-        // Solo permitir si hay actividades treasurehunt en el curso.
+        // If there are no treasurehunt activities, do not allow adding the condition.
         return $DB->record_exists('treasurehunt', ['course' => $course->id]);
     }
 }
