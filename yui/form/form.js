@@ -13,7 +13,7 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
         var cmid = this.cmid;
         var html = '<label><span class="p-r-1">' + M.util.get_string('select_treasurehunt', 'availability_treasurehunt') + '</span>';
         html += '<select name="treasurehuntid" class="custom-select">';
-        html += '<option value="">' + M.util.get_string('choosedots','moodle') + '</option>';
+        html += '<option value="">' + M.util.get_string('choosedots', 'moodle') + '</option>';
 
         for (var k in this.treasurehunts) {
             html += '<option value="' + this.treasurehunts[k].id + '">' + this.treasurehunts[k].display + '</option>';
@@ -31,7 +31,7 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
         html += '<input type="number" name="requiredvalue" min="0" class="form-control" style="width: 100px; display: inline-block;"></label>';
         html += '<label><span class="p-r-1">' + M.util.get_string('select_stage', 'availability_treasurehunt') + '</span>';
         html += '<select name="stageid" class="custom-select" style="display: inline-block;">';
-        html += '<option value="">' + M.util.get_string('choosedots','moodle') + '</option>';
+        html += '<option value="">' + M.util.get_string('choosedots', 'moodle') + '</option>';
         html += '</select></label>';
 
         var node = Y.Node.create('<span class="form-group">' + html + '</span>');
