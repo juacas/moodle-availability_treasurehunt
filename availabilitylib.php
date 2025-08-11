@@ -33,7 +33,7 @@
  * @param int $stageid Treasurehunt stage ID
  * @return array Array of objects with activity information
  */
-function treasurehunt_get_activities_with_stage_restriction($courseid, $stageid) {
+function availability_treasurehunt_get_activities_with_stage_restriction($courseid, $stageid) {
     // Get course information.
     $modinfo = get_fast_modinfo($courseid);
 
@@ -41,7 +41,7 @@ function treasurehunt_get_activities_with_stage_restriction($courseid, $stageid)
 
     // Iterate over all course activities.
     foreach ($modinfo->get_cms() as $cm) {
-        $modinfo = treasurehunt_get_activity_info_from_cm($cm);
+        $modinfo = availability_treasurehunt_get_activity_info_from_cm($cm);
         // Check if the activity has availability restrictions.
         if ($cm->availability) {
             // Decode the availability JSON.
@@ -49,7 +49,7 @@ function treasurehunt_get_activities_with_stage_restriction($courseid, $stageid)
 
             if ($availability && isset($availability->c)) {
                 // Search for treasurehunt restriction in the conditions.
-                [$found, $section] = treasurehunt_check_stage_restriction($availability, $stageid);
+                [$found, $section] = availability_treasurehunt_check_stage_restriction($availability, $stageid);
                 if ($found) {
                     $modinfo->locked = true;
                 }
@@ -66,7 +66,7 @@ function treasurehunt_get_activities_with_stage_restriction($courseid, $stageid)
  * @param cm_info $cm Moodle cm_info object
  * @return object Object with complete activity information
  */
-function treasurehunt_get_activity_info_from_cm($cm) {
+function availability_treasurehunt_get_activity_info_from_cm($cm) {
     $activityinfo = new stdClass();
     $activityinfo->cmid = $cm->id;
     $activityinfo->course = $cm->course;
@@ -89,7 +89,7 @@ function treasurehunt_get_activity_info_from_cm($cm) {
  * @param integer $stageid stage id to check.
  * @return array(bool, &object) true if found, conditions section
  */
-function treasurehunt_check_stage_restriction($availability, $stageid) {
+function availability_treasurehunt_check_stage_restriction($availability, $stageid) {
     // Search only condition at root. This is a very common scenario.
     if (isset($availability->c[0])) {
         if (
@@ -103,7 +103,7 @@ function treasurehunt_check_stage_restriction($availability, $stageid) {
         }
     }
     // Search for a group of availability_treasurehunt section.
-    $conditionsection = &treasurehunt_get_treasurehunt_availability_section($availability);
+    $conditionsection = &availability_treasurehunt_get_treasurehunt_availability_section($availability);
     if ($stageid) {
         // Search conditions.
         foreach (($conditionsection->c ?? []) as $trcondition) {
@@ -127,7 +127,7 @@ function treasurehunt_check_stage_restriction($availability, $stageid) {
  * @param stdClass $availability structure of availability.
  * @return stdClass|null treasurehunt section Reference or null
  */
-function &treasurehunt_get_treasurehunt_availability_section($availability) {
+function &availability_treasurehunt_get_treasurehunt_availability_section($availability) {
     // Search treasurehunt section.
     foreach ($availability->c as $conditionsection) {
         // Check if there is an "or" section at root.
@@ -147,7 +147,7 @@ function &treasurehunt_get_treasurehunt_availability_section($availability) {
  * @param bool $replace Whether to replace all existing restrictions.
  * @return stdClass  availability structure.
  */
-function treasurehunt_add_restriction($cm, $stage, $treasurehuntid, $replace = false) {
+function availability_treasurehunt_add_restriction($cm, $stage, $treasurehuntid, $replace = false) {
     $currentavailability = $cm->availability;
     $availability = null;
     // Create an availability structure from json or from scratch.
@@ -165,7 +165,7 @@ function treasurehunt_add_restriction($cm, $stage, $treasurehuntid, $replace = f
         ];
     }
     // Check if there is treasurehunt restriction into treasurehunt section.
-    [$found, $trsection] = treasurehunt_check_stage_restriction($availability, $stage->id);
+    [$found, $trsection] = availability_treasurehunt_check_stage_restriction($availability, $stage->id);
 
     if ($found === false) {
         // Add the new restriction.
@@ -201,7 +201,7 @@ function treasurehunt_add_restriction($cm, $stage, $treasurehuntid, $replace = f
  * @param stdClass $stage stage record to unlock.
  * @return stdClass|null availability structure.
  */
-function treasurehunt_remove_restriction($cm, $stage) {
+function availability_treasurehunt_remove_restriction($cm, $stage) {
     if (empty($cm->availability)) {
         return null;
     }
@@ -224,10 +224,10 @@ function treasurehunt_remove_restriction($cm, $stage) {
     }
 
     // Find treasurehunt section.
-    $trconditions = treasurehunt_get_treasurehunt_availability_section($availability);
+    $trconditions = availability_treasurehunt_get_treasurehunt_availability_section($availability);
     if ($trconditions !== null) {
         // Filter the restrictions to remove the one that matches stageid.
-        $conditions = treasurehunt_filter_restrictions($trconditions->c, $stage->id);
+        $conditions = availability_treasurehunt_filter_restrictions($trconditions->c, $stage->id);
         $trconditions->c = $conditions;
         // Calculate showc array.
         $trconditions->showc = array_fill(0, count($trconditions->c), true);
@@ -240,7 +240,7 @@ function treasurehunt_remove_restriction($cm, $stage) {
  * @param stdClass $newavailability availability structure.
  * @return bool
  */
-function treasurehunt_update_activity_availability($cm, $newavailability) {
+function availability_treasurehunt_update_activity_availability($cm, $newavailability) {
     global $DB;
     // Clear cache.
     $courseid = $cm->get_course()->id;
@@ -265,7 +265,7 @@ function treasurehunt_update_activity_availability($cm, $newavailability) {
  * @param int $stageid Stage ID to remove
  * @return array Filtered array of conditions
  */
-function treasurehunt_filter_restrictions($conditions, $stageid) {
+function availability_treasurehunt_filter_restrictions($conditions, $stageid) {
     $filtered = [];
 
     foreach ($conditions as $condition) {
