@@ -37,6 +37,7 @@ $string['minimum_time'] = 'Minimum time (minutes)';
 $string['missing_stage'] = 'Stage not found';
 $string['missing_treasurehunt'] = 'Treasurehunt activity not found';
 $string['pluginname'] = 'Restriction by Treasurehunt';
+$string['privacy:no_user_data'] = 'The Treasurehunt availability condition does not store any personal data.';
 $string['requires_completion'] = 'Requires Treasurehunt completion';
 $string['requires_current_stage'] = 'Requires being at stage number {$a->position} of "{$a->roadname}"';
 $string['requires_stages'] = 'Requires {$a} completed stages';
