@@ -21,7 +21,7 @@ use core\exception\moodle_exception;
 use restore_treasurehunt_activity_task;
 
 /**
- * Restricción por Treasurehunt condition
+ * Restriction by Treasurehunt condition
  *
  * Documentation: {@link https://moodledev.io/docs/apis/plugintypes/availability}
  *
@@ -41,7 +41,7 @@ class condition extends \core_availability\condition {
      */
     const TYPE_TIME = 'time';
     /**
-     * User must complete the tresurehunt.
+     * User must complete the treasurehunt.
      * @var string
      */
     const TYPE_COMPLETION = 'completion';
@@ -53,13 +53,13 @@ class condition extends \core_availability\condition {
 
     /** @var int treasurehunt ID */
     protected $treasurehuntid;
-    /** @var \stdClass record of the actvity */
+    /** @var \stdClass record of the activity */
     protected $treasurehunt = null;
 
     /** @var string condition type name */
     protected $conditiontype;
 
-    /** @var int Valor requerido */
+    /** @var int Required value */
     protected $requiredvalue;
 
     /** @var int stage ID */
@@ -77,7 +77,7 @@ class condition extends \core_availability\condition {
     }
 
     /**
-     * Guarda la condición en la estructura
+     * Saves the condition in the structure
      */
     public function save() {
         $data = (object) [
@@ -95,7 +95,7 @@ class condition extends \core_availability\condition {
     }
 
     /**
-     * Verifica si la condición se cumple
+     * Verifies if the condition is met
      * @param bool $not invert the condition
      * @param \core_availability\info $info course information
      * @param bool $grabthelot if true, grab the lot
@@ -108,7 +108,7 @@ class condition extends \core_availability\condition {
 
         global $DB;
         $course = $info->get_course();
-        // Obtener intentos del usuario.
+        // Get user attempts.
         if ($this->treasurehunt === null) {
             $this->treasurehunt = $DB->get_record('treasurehunt', ['id' => $this->treasurehuntid], '*', IGNORE_MISSING);
             if ($this->treasurehunt == false) { // Maybe, activity was deleted.
@@ -118,8 +118,8 @@ class condition extends \core_availability\condition {
         try {
             $userdata = treasurehunt_get_user_group_and_road($userid, $this->treasurehunt, false);
         } catch (moodle_exception $e) {
-            // User is not in a group or in more than one group (for a teams treassurehunt).
-            // Nevertheless, a incorrect situation.
+            // User is not in a group or in more than one group (for a teams treasurehunt).
+            // Nevertheless, an incorrect situation.
             return false;
         }
         $groupid = $userdata->groupid;
@@ -138,7 +138,7 @@ class condition extends \core_availability\condition {
             case self::TYPE_TIME:
                 // Time played.
                 $playtime = treasurehunt_get_hunt_duration($cmid, $userid, $groupid);
-                // Convert in minutes.
+                // Convert to minutes.
                 $playtime = $playtime / 60000;
                 $available = $playtime >= $this->requiredvalue;
                 break;
@@ -149,7 +149,7 @@ class condition extends \core_availability\condition {
                 break;
 
             case self::TYPE_CURRENT_STAGE:
-                // Get lastsolved stage.
+                // Get last solved stage.
                 $lastsolved = treasurehunt_query_last_successful_attempt($userid, $groupid, $roadid);
                 if ($lastsolved) {
                     $currentstage = $lastsolved->stageid;
@@ -255,7 +255,7 @@ class condition extends \core_availability\condition {
         return 'treasurehunt#' . $this->treasurehuntid . ' ' . $this->conditiontype . ':' . $this->requiredvalue;
     }
     /**
-     * Solve treasurehunt and stages ids.
+     * Resolve treasurehunt and stages ids.
      * @param integer $restoreid
      * @param integer $courseid
      * @param \base_logger $logger
@@ -326,7 +326,7 @@ class condition extends \core_availability\condition {
     }
 
     /**
-     * Incluye JavaScript para el formulario
+     * Includes JavaScript for the form
      */
     public function include_after_base_js() {
         global $PAGE;
@@ -354,7 +354,7 @@ class condition extends \core_availability\condition {
      * Gets the stages of a specific treasurehunt.
      * @param int $treasurehuntid Treasurehunt ID
      * @param \context $context Context of the treasurehunt
-     * @return array Array of stage options with stage ID as key and roadname/name as
+     * @return array Array of stage options with stage ID as key and roadname/name as value
      */
     public static function get_stages_options($treasurehuntid, $context) {
         global $DB;

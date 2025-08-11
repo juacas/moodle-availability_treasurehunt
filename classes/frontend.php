@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Restricción por Treasurehunt frontend
+ * Restriction by Treasurehunt frontend
  *
  * @package    availability_treasurehunt
  * @copyright  2025 YOUR NAME <your@email.com>
@@ -28,7 +28,7 @@ namespace availability_treasurehunt;
 class frontend extends \core_availability\frontend {
 
     /**
-     * Obtiene las cadenas de JavaScript
+     * Get the JavaScript strings.
      */
     protected function get_javascript_strings() {
         return [
