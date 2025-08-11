@@ -339,7 +339,6 @@ class condition extends \core_availability\condition {
      * @return array Array of treasurehunt options with instance ID as key and name as value
      */
     public static function get_treasurehunt_options($courseid) {
-        global $DB;
         $modinfo = get_fast_modinfo($courseid);
         $cminfos = $modinfo->get_instances_of('treasurehunt');
         $options = [];
@@ -357,8 +356,6 @@ class condition extends \core_availability\condition {
      * @return array Array of stage options with stage ID as key and roadname/name as value
      */
     public static function get_stages_options($treasurehuntid, $context) {
-        global $DB;
-
         $options = [];
         $stages = treasurehunt_get_stages($treasurehuntid, $context);
 

@@ -26,7 +26,6 @@ namespace availability_treasurehunt;
  * User interface for configuring conditions.
  */
 class frontend extends \core_availability\frontend {
-
     /**
      * Get the JavaScript strings.
      */
