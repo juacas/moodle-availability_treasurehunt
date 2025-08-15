@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace availability_treasurehunt;
+namespace availability_treasurehunt\privacy;
 
 /**
  * Null privacy provider.
@@ -23,7 +23,7 @@ namespace availability_treasurehunt;
  * @copyright  2025 Juan Pablo de Castro <juan.pablo.de.castro@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class privacy implements \core_privacy\local\metadata\null_provider {
+class provider implements \core_privacy\local\metadata\null_provider {
     /**
      * Get the language string identifier with the component's language
      * file to explain why this plugin stores no data.
