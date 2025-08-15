@@ -21,7 +21,7 @@ namespace availability_treasurehunt;
  *
  * @package    availability_treasurehunt
  * @category   test
- * @copyright  2025 YOUR NAME <your@email.com>
+ * @copyright  2025 Juan Pablo de Castro <juan.pablo.de.castro@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class lib_test extends \advanced_testcase {

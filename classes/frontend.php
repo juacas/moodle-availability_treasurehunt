@@ -18,7 +18,7 @@
  * Restriction by Treasurehunt frontend
  *
  * @package    availability_treasurehunt
- * @copyright  2025 YOUR NAME <your@email.com>
+ * @copyright  2025 Juan Pablo de Castro <juan.pablo.de.castro@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace availability_treasurehunt;
