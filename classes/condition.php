@@ -67,7 +67,7 @@ class condition extends \core_availability\condition {
 
     /**
      * Constructor
-     * @param \stdClass Structure with the condition data.
+     * @param \stdClass structure with the condition data.
      */
     public function __construct($structure) {
         $this->treasurehuntid = $structure->treasurehuntid;
