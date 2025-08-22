@@ -16,10 +16,14 @@
 
 namespace availability_treasurehunt;
 
+
 use context_module;
 use core\exception\moodle_exception;
 use restore_treasurehunt_activity_task;
 
+defined('MOODLE_INTERNAL') || die();
+global $CFG;
+require_once("{$CFG->dirroot}/mod/treasurehunt/locallib.php");
 /**
  * Restriction by Treasurehunt condition
  *
@@ -103,9 +107,6 @@ class condition extends \core_availability\condition {
      * @return bool true if the condition is met, false otherwise
      */
     public function is_available($not, \core_availability\info $info, $grabthelot, $userid) {
-        global $CFG;
-        require_once($CFG->dirroot . '/mod/treasurehunt/locallib.php');
-
         global $DB;
         $course = $info->get_course();
         // Get user attempts.
@@ -131,15 +132,18 @@ class condition extends \core_availability\condition {
             case self::TYPE_STAGES:
                 // Number of stages solved.
                 $lastsolved = treasurehunt_query_last_successful_attempt($userid, $groupid, $roadid);
-                $currentstage = $lastsolved->position;
-                $available = $currentstage >= $this->requiredvalue;
+                if ($lastsolved) {
+                    $currentstage = $lastsolved->position;
+                    $available = $currentstage >= $this->requiredvalue;
+                }
                 break;
-
             case self::TYPE_TIME:
+                // Get course module ID.
+                $cmid = $info->get_modinfo()->get_instances_of('treasurehunt')[$this->treasurehuntid]->id;
                 // Time played.
-                $playtime = treasurehunt_get_hunt_duration($cmid, $userid, $groupid);
+                $playtimestruct = treasurehunt_get_hunt_duration($cmid, $userid, $groupid);
                 // Convert to minutes.
-                $playtime = $playtime / 60000;
+                $playtime = $playtimestruct->duration / 60;
                 $available = $playtime >= $this->requiredvalue;
                 break;
 

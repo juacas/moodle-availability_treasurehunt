@@ -148,7 +148,7 @@ function &availability_treasurehunt_get_treasurehunt_availability_section($avail
  * @return stdClass  availability structure.
  */
 function availability_treasurehunt_add_restriction($cm, $stage, $treasurehuntid, $replace = false) {
-    $currentavailability = $cm->availability;
+    $currentavailability = $cm->availability; // phpcs:ignore PHP6602
     $availability = null;
     // Create an availability structure from json or from scratch.
     if ($replace == false && empty($currentavailability) === false) {
@@ -202,11 +202,11 @@ function availability_treasurehunt_add_restriction($cm, $stage, $treasurehuntid,
  * @return stdClass|null availability structure.
  */
 function availability_treasurehunt_remove_restriction($cm, $stage) {
-    if (empty($cm->availability)) {
+    if (empty($cm->availability)) { // phpcs:ignore PHP6602
         return null;
     }
 
-    $availability = json_decode($cm->availability, false);
+    $availability = json_decode($cm->availability, false); // phpcs:ignore PHP6602
      // Search if only condition at root.
     if (isset($availability->c[0])) {
         if (

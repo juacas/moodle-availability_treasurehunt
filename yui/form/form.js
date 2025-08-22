@@ -10,7 +10,6 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
     };
 
     M.availability_treasurehunt.form.getNode = function(json) {
-        var cmid = this.cmid;
         var html = '<label><span class="p-r-1">' + M.util.get_string('select_treasurehunt', 'availability_treasurehunt') + '</span>';
         html += '<select name="treasurehuntid" class="custom-select">';
         html += '<option value="">' + M.util.get_string('choosedots', 'moodle') + '</option>';
@@ -20,7 +19,8 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
         }
 
         html += '</select></label>';
-        html += '<br><label><span class="p-r-1">' + M.util.get_string('condition_type', 'availability_treasurehunt') + '</span>';
+        html += '<br><div class="condition-fields" style="display: none;">';
+        html += '<label><span class="p-r-1">' + M.util.get_string('condition_type', 'availability_treasurehunt') + '</span>';
         html += '<select name="conditiontype" class="custom-select">';
         html += '<option value="stages">' + M.util.get_string('stages_completed', 'availability_treasurehunt') + '</option>';
         html += '<option value="time">' + M.util.get_string('time_played', 'availability_treasurehunt') + '</option>';
@@ -31,19 +31,20 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
         html += '<input type="number" name="requiredvalue" min="0" class="form-control" style="width: 100px; display: inline-block;"></label>';
         html += '<label><span class="p-r-1">' + M.util.get_string('select_stage', 'availability_treasurehunt') + '</span>';
         html += '<select name="stageid" class="custom-select" style="display: inline-block;">';
-        html += '<option value="">' + M.util.get_string('choosedots', 'moodle') + '</option>';
         html += '</select></label>';
+        html += '</div>';
 
         var node = Y.Node.create('<span class="form-group">' + html + '</span>');
 
-        // Configurar eventos
+        // Get form elements
         var treasurehuntSelect = node.one('select[name=treasurehuntid]');
+        var conditionFieldsDiv = node.one('.condition-fields');
         var conditionSelect = node.one('select[name=conditiontype]');
         var valueInput = node.one('input[name=requiredvalue]');
         var stageSelect = node.one('select[name=stageid]');
         var stageLabel = stageSelect.get('parentNode').one('span');
 
-        // Configurar valores iniciales
+        // Set initial values
         if (json.treasurehuntid) {
             treasurehuntSelect.set('value', json.treasurehuntid);
         }
@@ -57,34 +58,66 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
             stageSelect.set('value', json.stageid);
         }
 
-        // Función para cargar stages cuando cambia el treasurehunt
+        // Function to load stages using core/ajax module
         var loadStages = function() {
             var treasurehuntId = treasurehuntSelect.get('value');
-            if (treasurehuntId) {
-                // Hacer petición AJAX para obtener stages
-                Y.io(M.cfg.wwwroot + '/availability/condition/treasurehunt/ajax.php', {
-                    data: 'action=get_stages&treasurehuntid=' + treasurehuntId + '&cmid=' + cmid,
-                    on: {
-                        success: function(id, o) {
-                            var stages = Y.JSON.parse(o.responseText);
-                            stageSelect.get('childNodes').remove();
-                            stageSelect.append('<option value="">' + M.util.get_string('choosedots', 'moodle') + '</option>');
+            if (!treasurehuntId) {
+                // Clear stages when no treasure hunt is selected
+                stageSelect.get('childNodes').remove();
+                return;
+            }
 
-                            for (var stageId in stages) {
-                                stageSelect.append('<option value="' + stageId + '">' + stages[stageId] + '</option>');
-                            }
-
-                            if (json.stageid) {
-                                stageSelect.set('value', json.stageid);
-                                M.core_availability.form.update();
-                            }
-                        }
+            // Use require to load the core/ajax module
+            require(['core/ajax', 'core/notification'], function(Ajax, Notification) {
+                var request = {
+                    methodname: 'availability_treasurehunt_get_stages',
+                    args: {
+                        treasurehuntid: parseInt(treasurehuntId, 10)
                     }
-                });
+                };
+
+                Ajax.call([request])[0]
+                    .then(function(stages) {
+                        // Clear existing options
+                        stageSelect.get('childNodes').remove();
+
+                        // Add new options
+                        Y.Array.each(stages, function(stage) {
+                            stageSelect.append('<option value="' + stage.id + '">' + stage.name + '</option>');
+                        });
+
+                        // Set the stage value (either from json or empty )
+                        var stageValue = json.stageid || '';
+                        stageSelect.set('value', stageValue);
+
+                        // Update form if we had a previous value
+                        if (json.stageid) {
+                            M.core_availability.form.update();
+                        }
+                    })
+                    .catch(function(error) {
+                        Notification.exception(error);
+                        console.error('Error loading stages:', error);
+
+                        // On error, clear the stage select options.
+                        stageSelect.get('childNodes').remove();
+                    });
+            });
+        };
+
+        // Show/hide condition fields based on treasure hunt selection
+        var updateConditionFieldsVisibility = function() {
+            var treasurehuntId = treasurehuntSelect.get('value');
+            if (treasurehuntId) {
+                conditionFieldsDiv.setStyle('display', 'block');
+            } else {
+                conditionFieldsDiv.setStyle('display', 'none');
+                // Reset condition type to default when hiding
+                conditionSelect.set('value', 'stages');
             }
         };
 
-        // Mostrar/ocultar campos según el tipo
+        // Show/hide fields based on condition type
         var updateFields = function() {
             var type = conditionSelect.get('value');
             var valueLabel = valueInput.get('parentNode').one('span');
@@ -99,7 +132,6 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
                 valueLabel.setContent(M.util.get_string('minimum_time', 'availability_treasurehunt'));
                 stageSelect.setStyle('display', 'none');
                 stageLabel.setContent('');
-
             } else if (type === 'current_stage') {
                 valueInput.setStyle('display', 'none');
                 valueLabel.setContent('');
@@ -114,23 +146,31 @@ YUI.add('moodle-availability_treasurehunt-form', function(Y, NAME) {
             }
         };
 
-        // Eventos
+        // Event handlers
         treasurehuntSelect.on('change', function() {
-            loadStages();
+            updateConditionFieldsVisibility();
+            // Reset stage selection when treasure hunt changes
+            if (conditionSelect.get('value') === 'current_stage') {
+                loadStages();
+            }
             M.core_availability.form.update();
         });
+
         conditionSelect.on('change', function() {
             updateFields();
             M.core_availability.form.update();
         });
+
         valueInput.on('change', function() {
             M.core_availability.form.update();
         });
+
         stageSelect.on('change', function() {
             M.core_availability.form.update();
         });
 
-        // Inicializar campos
+        // Initialize fields
+        updateConditionFieldsVisibility();
         updateFields();
 
         return node;

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for availability_treasurehunt
+ * External services for availability_treasurehunt plugin.
  *
  * @package    availability_treasurehunt
  * @copyright  2025 Juan Pablo de Castro <juan.pablo.de.castro@gmail.com>
@@ -24,9 +24,27 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component    = 'availability_treasurehunt';
-$plugin->release      = '1.0.3';
-$plugin->version      = 2025082200;
-$plugin->requires     = 2022112800;
-$plugin->maturity     = MATURITY_BETA;
-$plugin->dependencies = ['mod_treasurehunt' => 2025081100];
+$functions = [
+    'availability_treasurehunt_get_stages' => [
+        'classname' => 'availability_treasurehunt\external\get_stages',
+        'methodname' => 'get_treasurehunt_stages',
+        'description' => 'Get available stages for a treasure hunt activity',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'mod/treasurehunt:view',
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
+];
+
+$services = [
+    'Treasure Hunt Availability Service' => [
+        'functions' => [
+            'availability_treasurehunt_get_stages',
+        ],
+        'restrictedusers' => 0,
+        'enabled' => 1,
+        'shortname' => 'treasurehunt_availability',
+        'downloadfiles' => 0,
+        'uploadfiles' => 0,
+    ],
+];
