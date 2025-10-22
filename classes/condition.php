@@ -118,48 +118,50 @@ class condition extends \core_availability\condition {
         }
         try {
             $userdata = treasurehunt_get_user_group_and_road($userid, $this->treasurehunt, false);
+
+            $groupid = $userdata->groupid;
+            $roadid = $userdata->roadid;
+
+            $available = false;
+
+            switch ($this->conditiontype) {
+                case self::TYPE_STAGES:
+                    // Number of stages solved.
+                    $lastsolved = treasurehunt_query_last_successful_attempt($userid, $groupid, $roadid);
+                    if ($lastsolved) {
+                        $currentstage = $lastsolved->position;
+                        $available = $currentstage >= $this->requiredvalue;
+                    }
+                    break;
+                case self::TYPE_TIME:
+                    // Get course module ID.
+                    $cmid = $info->get_modinfo()->get_instances_of('treasurehunt')[$this->treasurehuntid]->id;
+                    // Time played.
+                    $playtimestruct = treasurehunt_get_hunt_duration($cmid, $userid, $groupid);
+                    // Convert to minutes.
+                    $playtime = $playtimestruct->duration / 60;
+                    $available = $playtime >= $this->requiredvalue;
+                    break;
+
+                case self::TYPE_COMPLETION:
+                    // All stages.
+                    $available = treasurehunt_check_if_user_has_finished($userid, $groupid, $roadid);
+                    break;
+
+                case self::TYPE_CURRENT_STAGE:
+                    // Get last solved stage.
+                    $lastsolved = treasurehunt_query_last_successful_attempt($userid, $groupid, $roadid);
+                    if ($lastsolved) {
+                        $currentstage = $lastsolved->stageid;
+                        $available = $currentstage == $this->stageid;
+                    }
+                    break;
+            }
         } catch (moodle_exception $e) {
             // User is not in a group or in more than one group (for a teams treasurehunt).
+            // Somehow we cannot determine conditions.
             // Nevertheless, an incorrect situation.
-            return false;
-        }
-        $groupid = $userdata->groupid;
-        $roadid = $userdata->roadid;
-
-        $available = false;
-
-        switch ($this->conditiontype) {
-            case self::TYPE_STAGES:
-                // Number of stages solved.
-                $lastsolved = treasurehunt_query_last_successful_attempt($userid, $groupid, $roadid);
-                if ($lastsolved) {
-                    $currentstage = $lastsolved->position;
-                    $available = $currentstage >= $this->requiredvalue;
-                }
-                break;
-            case self::TYPE_TIME:
-                // Get course module ID.
-                $cmid = $info->get_modinfo()->get_instances_of('treasurehunt')[$this->treasurehuntid]->id;
-                // Time played.
-                $playtimestruct = treasurehunt_get_hunt_duration($cmid, $userid, $groupid);
-                // Convert to minutes.
-                $playtime = $playtimestruct->duration / 60;
-                $available = $playtime >= $this->requiredvalue;
-                break;
-
-            case self::TYPE_COMPLETION:
-                // All stages.
-                $available = treasurehunt_check_if_user_has_finished($userid, $groupid, $roadid);
-                break;
-
-            case self::TYPE_CURRENT_STAGE:
-                // Get last solved stage.
-                $lastsolved = treasurehunt_query_last_successful_attempt($userid, $groupid, $roadid);
-                if ($lastsolved) {
-                    $currentstage = $lastsolved->stageid;
-                    $available = $currentstage == $this->stageid;
-                }
-                break;
+            $available = false;
         }
 
         if ($not) {
