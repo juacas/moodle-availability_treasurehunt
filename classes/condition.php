@@ -58,7 +58,7 @@ class condition extends \core_availability\condition {
     /** @var int treasurehunt ID */
     protected $treasurehuntid;
     /** @var \stdClass record of the activity */
-    protected $treasurehunt = null;
+    public $treasurehunt = null;
 
     /** @var string condition type name */
     protected $conditiontype;
@@ -110,14 +110,9 @@ class condition extends \core_availability\condition {
         global $DB;
         $course = $info->get_course();
         // Get user attempts.
-        if ($this->treasurehunt === null) {
-            $this->treasurehunt = $DB->get_record('treasurehunt', ['id' => $this->treasurehuntid], '*', IGNORE_MISSING);
-            if ($this->treasurehunt == false) { // Maybe, activity was deleted.
-                return false;
-            }
-        }
+        $treasurehunt = $this->get_treasurehunt_instance();
         try {
-            $userdata = treasurehunt_get_user_group_and_road($userid, $this->treasurehunt, false);
+            $userdata = treasurehunt_get_user_group_and_road($userid, $treasurehunt, false);
 
             $groupid = $userdata->groupid;
             $roadid = $userdata->roadid;
@@ -171,6 +166,16 @@ class condition extends \core_availability\condition {
         return $available;
     }
 
+    /**
+     * Get Tresurehunt instance.
+     */
+    public function get_treasurehunt_instance() {
+        global $DB;
+        if ($this->treasurehunt === null) {
+            $this->treasurehunt = $DB->get_record('treasurehunt', ['id' => $this->treasurehuntid], '*', IGNORE_MISSING);
+        }
+        return $this->treasurehunt;
+    }
     /**
      * Get the description of the condition.
      * @param bool $full if true, return full description
@@ -294,9 +299,20 @@ class condition extends \core_availability\condition {
             );
         } else {
             $this->treasurehuntid = (int)$rec->newitemid;
+            // TODO: Reformat label in activities intros.
+            // Get all cms with this availability condition.
+            global $CFG;
+            require_once($CFG->dirroot . '/availability/condition/treasurehunt/availabilitylib.php');
+            $activities = availability_treasurehunt_get_activities_with_stage_restriction($courseid, $this->stageid);
+            foreach ($activities as $modinfo) {
+                if ($modinfo->locked) {
+                    // Update return link if exists.
+                    availability_treasurehunt_add_return_link($modinfo, $this, false);
+                }
+            }
         }
         // Re-map Stage TODO.
-        $rec = \restore_dbops::get_backup_ids_record($restoreid, 'treasurehunt_stages', $this->treasurehuntid);
+        $rec = \restore_dbops::get_backup_ids_record($restoreid, 'treasurehunt_stage', $this->stageid);
         if (!$rec || !$rec->newitemid) {
             // If we are on the same course (e.g. duplicate) then we can just
             // use the existing one.

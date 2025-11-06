@@ -27,11 +27,12 @@
 /**
  * Gets the list of course activities
  * for the specified stageid, either alone or combined via AND with other restrictions.
- * Those that have the availability/treasurehunt restriction applied are marked with locked=true.
+ * Those that have the availability/treasurehunt restriction applied are marked with
+ * $info->locked=true.
  *
  * @param int $courseid Course ID
  * @param int $stageid Treasurehunt stage ID
- * @return array Array of objects with activity information
+ * @return array[stdClass] Array of objects with activity information
  */
 function availability_treasurehunt_get_activities_with_stage_restriction($courseid, $stageid) {
     // Get course information.
@@ -145,7 +146,7 @@ function &availability_treasurehunt_get_treasurehunt_availability_section($avail
  * @param stdClass $stage stage record.
  * @param int $treasurehuntid Treasurehunt ID.
  * @param bool $replace Whether to replace all existing restrictions.
- * @return stdClass  availability structure.
+ * @return [stdClass, condition]  availability structure, condition structure.
  */
 function availability_treasurehunt_add_restriction($cm, $stage, $treasurehuntid, $replace = false) {
     $currentavailability = $cm->availability; // phpcs:ignore PHP6602
@@ -191,7 +192,8 @@ function availability_treasurehunt_add_restriction($cm, $stage, $treasurehuntid,
         $trsection->c[] = $newrestriction;
         $trsection->showc[] = true;
     }
-    return $availability;
+    $condition = new availability_treasurehunt\condition($newrestriction);
+    return [$availability, $condition];
 }
 
 /**
@@ -281,3 +283,47 @@ function availability_treasurehunt_filter_restrictions($conditions, $stageid) {
 
     return $filtered;
 }
+
+/**
+ * Get intro text from module instance.
+ * Search for <span class="treasurehunt-return-link">...</span>.
+ * Create the mark at the end of the text for the return link if it is not found.
+ * Regenerate the return-link inside the <span>.
+ *
+ * @param stdClass $modinfo
+ * @param availability_treasurehunt\condition $condition
+ * @return void
+ */
+function availability_treasurehunt_add_return_link($modinfo, $condition, $add = false, $delete = false) {
+    // Get treasurehunt instance from condition.
+    $treasurehunt = $condition->get_treasurehunt_instance();
+    // Get module instance from $modinfo->instance and $modinfo->modulename.
+    // Get raw description text, search for extra text and reformat.
+    global $DB;
+    $intro = $DB->get_field($modinfo->modname, 'intro', ['id' => $modinfo->instance] );
+    if ($delete) {
+        $add = false;
+        $returnlinkhtml = '';
+    } else {
+        $returnlinktext = get_string('returnlinktext', 'availability_treasurehunt', $treasurehunt);
+        $returnlinkhtml = '<span class="treasurehunt-return-link">' . $returnlinktext . '</span>';
+    }
+    // Search for existing return link span.
+    if (strpos($intro, 'class="treasurehunt-return-link"') !== false) {
+        // Replace existing return link.
+        $intro = preg_replace(
+            '/<span class="treasurehunt-return-link">.*?<\/span>/s',
+            $returnlinkhtml,
+            $intro
+        );
+    } else if ($add) {
+        // Append return link at the end.
+        $intro .= '<br>' . $returnlinkhtml;
+    }
+
+    // Update intro.
+    global $DB;
+    $DB->set_field($modinfo->modname, 'intro', $intro, ['id' => $modinfo->instance]);
+
+}
+
