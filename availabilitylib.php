@@ -32,21 +32,29 @@
  *
  * @param int $courseid Course ID
  * @param int $stageid Treasurehunt stage ID
- * @return array[stdClass] Array of objects with activity information
+ * @return array[stdClass] Array of objects with cm_info and locked status.
  */
 function availability_treasurehunt_get_activities_with_stage_restriction($courseid, $stageid) {
     // Get course information.
-    $modinfo = get_fast_modinfo($courseid);
+    $fastmodinfo = get_fast_modinfo($courseid);
 
     $matchingactivities = [];
 
     // Iterate over all course activities.
-    foreach ($modinfo->get_cms() as $cm) {
-        $modinfo = availability_treasurehunt_get_activity_info_from_cm($cm);
+    foreach ($fastmodinfo->get_cms() as $cminfo) {
+        // Mark each activity as controlled by availability_treasurehunt or not.
+        $modinfo = (object) [
+            'locked'=> false,
+            'cm_info'=> $cminfo,
+        ];
+        // Discard activities invisible to the user.
+        if (!$cminfo->uservisible) {
+            continue;
+        }
         // Check if the activity has availability restrictions.
-        if ($cm->availability) {
+        if ($cminfo->availability) {
             // Decode the availability JSON.
-            $availability = json_decode($cm->availability, false);
+            $availability = json_decode($cminfo->availability, false);
 
             if ($availability && isset($availability->c)) {
                 // Search for treasurehunt restriction in the conditions.
@@ -61,28 +69,7 @@ function availability_treasurehunt_get_activities_with_stage_restriction($course
 
     return $matchingactivities;
 }
-/**
- * Get information of an activity from the cm_info object.
- *
- * @param cm_info $cm Moodle cm_info object
- * @return object Object with complete activity information
- */
-function availability_treasurehunt_get_activity_info_from_cm($cm) {
-    $activityinfo = new stdClass();
-    $activityinfo->cmid = $cm->id;
-    $activityinfo->course = $cm->course;
-    $activityinfo->module = $cm->module;
-    $activityinfo->instance = $cm->instance;
-    $activityinfo->modulename = $cm->modname;
-    $activityinfo->name = $cm->name;
-    $activityinfo->availability = $cm->availability;
-    $activityinfo->url = $cm->url;
-    $activityinfo->visible = $cm->visible;
-    $activityinfo->uservisible = $cm->uservisible;
-    $activityinfo->locked = false;
 
-    return $activityinfo;
-}
 /**
  * Auxiliary function to check if a stageid is present in the restrictions
  *
@@ -129,6 +116,10 @@ function availability_treasurehunt_check_stage_restriction($availability, $stage
  * @return stdClass|null treasurehunt section Reference or null
  */
 function &availability_treasurehunt_get_treasurehunt_availability_section($availability) {
+    if (!isset($availability->c)) {
+        $nullreference = null;
+        return $nullreference;
+    }
     // Search treasurehunt section.
     foreach ($availability->c as $conditionsection) {
         // Check if there is an "or" section at root.
@@ -195,6 +186,50 @@ function availability_treasurehunt_add_restriction($cm, $stage, $treasurehuntid,
     $condition = new availability_treasurehunt\condition($newrestriction);
     return [$availability, $condition];
 }
+/**
+ * Change a treasurehunt restriction to a new stageid. For restores.
+ *
+ * @param course_modinfo $cm course module.
+ * @param stdClass $oldstage stage record.
+ * @param int $oldtreasurehuntid Treasurehunt ID.
+ * @param stdClass $newstage stage record.
+ * @param int $newtreasurehuntid Treasurehunt ID.
+ * @return [condition, mixed]  availability structure, condition structure.
+ */
+function availability_treasurehunt_get_updated_restriction(
+    $cm,
+    $oldstageid,
+    $oldtreasurehuntid,
+    $newstageid,
+    $newtreasurehuntid
+) {
+
+    $availability = $cm->availability ? json_decode($cm->availability, false) : null;
+    // Check if there is treasurehunt restriction into treasurehunt section.
+    [$found, $trsection] = availability_treasurehunt_check_stage_restriction($availability, $oldstageid);
+    $updatedcondition = null;
+    if ($found === true) {
+        // Update the existing restriction.
+        foreach ($trsection->c as $condition) {
+            // Check if it matches with $newrestriction.
+            if (
+                ($condition->type ?? '') === 'treasurehunt' &&
+                ($condition->stageid ?? '') == $oldstageid &&
+                ($condition->conditiontype ?? '') == 'current_stage' &&
+                ($condition->treasurehuntid ?? '') == $oldtreasurehuntid
+            ) {
+                // Update to new values.
+                $condition->stageid = $newstageid;
+                $condition->treasurehuntid = $newtreasurehuntid;
+                $condition->requiredvalue = 0;
+                $condition->conditiontype = 'current_stage';
+                $updatedcondition = new availability_treasurehunt\condition($condition);
+                break;
+            }
+        }
+    }
+    return [$availability, $updatedcondition];
+}
 
 /**
  * Removes a specific treasurehunt restriction
@@ -248,7 +283,7 @@ function availability_treasurehunt_update_activity_availability($cm, $newavailab
     $courseid = $cm->get_course()->id;
     try {
         // Update using the DB.
-        $DB->set_field('course_modules', 'availability', json_encode($newavailability), ['id' => $cm->id]);
+        $DB->set_field('course_modules', 'availability', $newavailability != null ? json_encode($newavailability) : null, ['id' => $cm->id]);
         // Invalidate course cache.
         rebuild_course_cache($courseid, true);
 
@@ -290,40 +325,71 @@ function availability_treasurehunt_filter_restrictions($conditions, $stageid) {
  * Create the mark at the end of the text for the return link if it is not found.
  * Regenerate the return-link inside the <span>.
  *
- * @param stdClass $modinfo
+ * @param cm_info $cminfo
  * @param availability_treasurehunt\condition $condition
  * @return void
  */
-function availability_treasurehunt_add_return_link($modinfo, $condition, $add = false, $delete = false) {
+function availability_treasurehunt_add_return_link(cm_info $cminfo, $condition, $add = false, $delete = false) {
+    global $DB;
     // Get treasurehunt instance from condition.
     $treasurehunt = $condition->get_treasurehunt_instance();
     // Get module instance from $modinfo->instance and $modinfo->modulename.
     // Get raw description text, search for extra text and reformat.
-    global $DB;
-    $intro = $DB->get_field($modinfo->modname, 'intro', ['id' => $modinfo->instance] );
+    $intro = $cminfo->content;
+
     if ($delete) {
         $add = false;
         $returnlinkhtml = '';
     } else {
-        $returnlinktext = get_string('returnlinktext', 'availability_treasurehunt', $treasurehunt);
+        $treasurehuntcmid = get_coursemodule_from_instance(
+            'treasurehunt',
+            $treasurehunt->id,
+            $treasurehunt->course,
+            false,
+            MUST_EXIST
+        )->id;
+
+        $returnurl = new moodle_url('/mod/treasurehunt/view.php', ['id' => $treasurehuntcmid]);
+        $treasurehunttitle = format_string($treasurehunt->name);
+
+        $returnlinktext = new lang_string(
+            'returnlinktext',
+            'availability_treasurehunt',
+            [
+                  'returnlink' => $returnurl->out(false),
+                  'treasurehuntname' => $treasurehunttitle,
+              ]
+        );
         $returnlinkhtml = '<span class="treasurehunt-return-link">' . $returnlinktext . '</span>';
     }
     // Search for existing return link span.
     if (strpos($intro, 'class="treasurehunt-return-link"') !== false) {
         // Replace existing return link.
-        $intro = preg_replace(
+        $newintro = preg_replace(
             '/<span class="treasurehunt-return-link">.*?<\/span>/s',
             $returnlinkhtml,
             $intro
         );
     } else if ($add) {
         // Append return link at the end.
-        $intro .= '<br>' . $returnlinkhtml;
+        $newintro = $intro . '<br>' . $returnlinkhtml;
+    } else {
+        // No changes.
+        $newintro = $intro;
     }
 
-    // Update intro.
-    global $DB;
-    $DB->set_field($modinfo->modname, 'intro', $intro, ['id' => $modinfo->instance]);
-
+    // Update intro in activity.
+    if ($newintro == $intro) {
+        // No changes made, avoid updating module.
+        return;
+    }
+    $DB->set_field(
+        $cminfo->modname,
+        'intro',
+        $newintro,
+        ['id' => $cminfo->instance]
+    );
+    // Invalidate course cache.
+    rebuild_course_cache($cminfo->course, clearonly: true);
 }
 

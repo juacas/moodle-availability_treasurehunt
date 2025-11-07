@@ -16,7 +16,6 @@
 
 namespace availability_treasurehunt;
 
-
 use context_module;
 use core\exception\moodle_exception;
 use restore_treasurehunt_activity_task;
@@ -274,14 +273,19 @@ class condition extends \core_availability\condition {
      * @return bool
      */
     public function update_after_restore($restoreid, $courseid, \base_logger $logger, $name) {
-        global $DB;
+        global $DB, $CFG;
+
+        require_once($CFG->dirroot . '/availability/condition/treasurehunt/availabilitylib.php');
         if (!$this->treasurehuntid) {
             return false;
         }
-        $rec = \restore_dbops::get_backup_ids_record($restoreid, 'treasurehunt', $this->treasurehuntid);
-        if (!$rec || !$rec->newitemid) {
-            // If we are on the same course (e.g. duplicate) then we can just
-            // use the existing one.
+        $treasurehuntrestore = \restore_dbops::get_backup_ids_record($restoreid, 'treasurehunt', $this->treasurehuntid);
+        $oldtreasurehuntid = $this->treasurehuntid;
+        $newtreasurehuntid = $treasurehuntrestore ? (int)$treasurehuntrestore->newitemid : 0;
+
+        if (!$newtreasurehuntid) {
+            // If we are on the same course (e.g. duplicating activity) then we can just
+            // use the existing treasurehunt.
             if (
                 $DB->record_exists(
                     'treasurehunt',
@@ -290,7 +294,7 @@ class condition extends \core_availability\condition {
             ) {
                 return false;
             }
-            // Otherwise it's a warning.
+            // Otherwise it's a warning. Condition in backup refers to a treasurehunt not restored.
             $this->treasurehuntid = -1;
             $logger->process(
                 'Restored item (' . $name .
@@ -298,22 +302,13 @@ class condition extends \core_availability\condition {
                 \backup::LOG_WARNING
             );
         } else {
-            $this->treasurehuntid = (int)$rec->newitemid;
-            // TODO: Reformat label in activities intros.
-            // Get all cms with this availability condition.
-            global $CFG;
-            require_once($CFG->dirroot . '/availability/condition/treasurehunt/availabilitylib.php');
-            $activities = availability_treasurehunt_get_activities_with_stage_restriction($courseid, $this->stageid);
-            foreach ($activities as $modinfo) {
-                if ($modinfo->locked) {
-                    // Update return link if exists.
-                    availability_treasurehunt_add_return_link($modinfo, $this, false);
-                }
-            }
+            // Restoring along with a treasurehunt, update return links in locked activities.
+            $this->treasurehuntid = (int)$newtreasurehuntid;
         }
-        // Re-map Stage TODO.
-        $rec = \restore_dbops::get_backup_ids_record($restoreid, 'treasurehunt_stage', $this->stageid);
-        if (!$rec || !$rec->newitemid) {
+        $stagerestore = \restore_dbops::get_backup_ids_record($restoreid, 'treasurehunt_stage', $this->stageid);
+        $oldstageid = $this->stageid;
+        $newstageid = $stagerestore ? (int) $stagerestore->newitemid : 0;
+        if (!$stagerestore->newitemid) {
             // If we are on the same course (e.g. duplicate) then we can just
             // use the existing one.
             if ($DB->record_exists('treasurehunt_stages', ['id' => $this->stageid])) {
@@ -327,7 +322,36 @@ class condition extends \core_availability\condition {
                 \backup::LOG_WARNING
             );
         } else {
-            $this->stageid = (int)$rec->newitemid;
+            // Restoring along with a treasurehunt stage.
+            $this->stageid = (int)$newstageid;
+            $this->treasurehuntid = (int)$newtreasurehuntid;
+        }
+
+        // Awfull hack for getting the activities restored in this restore.
+        $restoretask = \core_availability\info::get_restore_task($restoreid);
+        $rp = new \ReflectionProperty($restoretask, 'plan');
+        //$rp->setAccessible(true);            // PHP ≤ 8.0 (deprecado en 8.1)
+        $plan = $rp->getValue($restoretask);
+        $tasks = $plan->get_tasks();
+        // Get restored activities.
+        $cms = [];
+        foreach ($tasks as $task) {
+            $isactivity = $task instanceof \restore_activity_task;
+
+            if ($isactivity) {
+                $modulename = $task->get_modulename();
+                $moduleid = $task->get_moduleid();
+                $cms[$moduleid] = $modulename;
+            }
+        }
+        foreach ($cms as $moduleid => $modulename) {
+            // Get $cm from moduleid.
+            [$course, $cm] = get_course_and_cm_from_cmid($moduleid, $modulename);
+            // Update restrictions in restored activities.
+            [$availability, $condition] = availability_treasurehunt_get_updated_restriction($cm, $oldstageid, $oldtreasurehuntid, $newstageid, $newtreasurehuntid);
+            availability_treasurehunt_update_activity_availability($cm, $availability);
+            // Update return links in restored activities.
+            availability_treasurehunt_add_return_link(cminfo: $cm, condition: $this, add: false, delete:false);
         }
         return true;
     }
@@ -366,6 +390,9 @@ class condition extends \core_availability\condition {
         $options = [];
 
         foreach ($cminfos as $cminfo) {
+            if (!$cminfo->uservisible) {
+                continue;
+            }
             $options[$cminfo->instance] = $cminfo->name;
         }
         return $options;
