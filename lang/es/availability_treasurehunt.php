@@ -42,6 +42,7 @@ $string['requires_current_stage'] = 'Requiere estar en la etapa número {$a->pos
 $string['requires_stages'] = 'Requiere {$a} etapas completadas';
 $string['requires_time'] = 'Requiere {$a} minutos de tiempo de juego';
 $string['requires_treasurehunt'] = 'Requiere progreso en Caza del Tesoro';
+$string['returnlinktext'] = 'Una vez finalizado esto, es posible que desee ir a <a href="{$a->returnlink}"><img src="{$a->icon}" alt="Icono de Caza del Tesoro"/>Caza del Tesoro "{$a->treasurehuntname}"</a>.';
 $string['select_stage'] = 'Seleccionar etapa';
 $string['select_treasurehunt'] = 'Seleccionar Caza del Tesoro';
 $string['stage'] = 'Etapa';

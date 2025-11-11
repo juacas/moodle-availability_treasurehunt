@@ -44,8 +44,8 @@ function availability_treasurehunt_get_activities_with_stage_restriction($course
     foreach ($fastmodinfo->get_cms() as $cminfo) {
         // Mark each activity as controlled by availability_treasurehunt or not.
         $modinfo = (object) [
-            'locked'=> false,
-            'cm_info'=> $cminfo,
+            'locked' => false,
+            'cm_info' => $cminfo,
         ];
         // Discard activities invisible to the user.
         if (!$cminfo->uservisible) {
@@ -283,7 +283,12 @@ function availability_treasurehunt_update_activity_availability($cm, $newavailab
     $courseid = $cm->get_course()->id;
     try {
         // Update using the DB.
-        $DB->set_field('course_modules', 'availability', $newavailability != null ? json_encode($newavailability) : null, ['id' => $cm->id]);
+        $DB->set_field(
+            'course_modules',
+            'availability',
+            $newavailability != null ? json_encode($newavailability) : null,
+            ['id' => $cm->id]
+        );
         // Invalidate course cache.
         rebuild_course_cache($courseid, true);
 
@@ -351,13 +356,14 @@ function availability_treasurehunt_add_return_link(cm_info $cminfo, $condition, 
 
         $returnurl = new moodle_url('/mod/treasurehunt/view.php', ['id' => $treasurehuntcmid]);
         $treasurehunttitle = format_string($treasurehunt->name);
-
+        $iconurl = new moodle_url("/mod/treasurehunt/pix/icon.svg");
         $returnlinktext = new lang_string(
             'returnlinktext',
             'availability_treasurehunt',
             [
-                  'returnlink' => $returnurl->out(false),
-                  'treasurehuntname' => $treasurehunttitle,
+                'icon' => $iconurl->out(false),
+                'returnlink' => $returnurl->out(false),
+                'treasurehuntname' => $treasurehunttitle,
               ]
         );
         $returnlinkhtml = '<span class="treasurehunt-return-link">' . $returnlinktext . '</span>';
@@ -392,4 +398,3 @@ function availability_treasurehunt_add_return_link(cm_info $cminfo, $condition, 
     // Invalidate course cache.
     rebuild_course_cache($cminfo->course, clearonly: true);
 }
-

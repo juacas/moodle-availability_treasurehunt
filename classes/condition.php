@@ -327,10 +327,10 @@ class condition extends \core_availability\condition {
             $this->treasurehuntid = (int)$newtreasurehuntid;
         }
 
-        // Awfull hack for getting the activities restored in this restore.
+        // Dirty hack for getting the activities restored in this restore session.
+        // Sorry but I don't see another way to do it.
         $restoretask = \core_availability\info::get_restore_task($restoreid);
         $rp = new \ReflectionProperty($restoretask, 'plan');
-        //$rp->setAccessible(true);            // PHP ≤ 8.0 (deprecado en 8.1)
         $plan = $rp->getValue($restoretask);
         $tasks = $plan->get_tasks();
         // Get restored activities.
@@ -348,7 +348,13 @@ class condition extends \core_availability\condition {
             // Get $cm from moduleid.
             [$course, $cm] = get_course_and_cm_from_cmid($moduleid, $modulename);
             // Update restrictions in restored activities.
-            [$availability, $condition] = availability_treasurehunt_get_updated_restriction($cm, $oldstageid, $oldtreasurehuntid, $newstageid, $newtreasurehuntid);
+            [$availability, $condition] = availability_treasurehunt_get_updated_restriction(
+                $cm,
+                $oldstageid,
+                $oldtreasurehuntid,
+                $newstageid,
+                $newtreasurehuntid
+            );
             availability_treasurehunt_update_activity_availability($cm, $availability);
             // Update return links in restored activities.
             availability_treasurehunt_add_return_link(cminfo: $cm, condition: $this, add: false, delete:false);
