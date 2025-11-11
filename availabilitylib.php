@@ -190,9 +190,9 @@ function availability_treasurehunt_add_restriction($cm, $stage, $treasurehuntid,
  * Change a treasurehunt restriction to a new stageid. For restores.
  *
  * @param course_modinfo $cm course module.
- * @param stdClass $oldstage stage record.
+ * @param stdClass $oldstageid stage record.
  * @param int $oldtreasurehuntid Treasurehunt ID.
- * @param stdClass $newstage stage record.
+ * @param stdClass $newstageid stage record.
  * @param int $newtreasurehuntid Treasurehunt ID.
  * @return [condition, mixed]  availability structure, condition structure.
  */
@@ -332,6 +332,8 @@ function availability_treasurehunt_filter_restrictions($conditions, $stageid) {
  *
  * @param cm_info $cminfo
  * @param availability_treasurehunt\condition $condition
+ * @param bool $add whether to add the return link if not present.
+ * @param bool $delete whether to delete the return link if present.
  * @return void
  */
 function availability_treasurehunt_add_return_link(cm_info $cminfo, $condition, $add = false, $delete = false) {
