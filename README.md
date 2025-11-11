@@ -10,6 +10,11 @@ See [https://moodle.org/plugins/mod_treasurehunt](https://moodle.org/plugins/mod
 - **Playing time**: Require a minimum time played.
 - **Full completion**: Require the treasurehunt to be completely finished. It is unlinked to activity completion.
 - **Current stage: the user must be exactly in a precise stage (position discovered).
+- **Return link**: When restoring the availability condition, check the description text of the activities and update the return link to restored treasurehunt activity.
+
+## Change log
+- v1.0.4 - Update return links after restoration.
+
 
 ## Installation
 

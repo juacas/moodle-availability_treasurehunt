@@ -43,6 +43,7 @@ $string['requires_current_stage'] = 'Requires being at stage number {$a->positio
 $string['requires_stages'] = 'Requires {$a} completed stages';
 $string['requires_time'] = 'Requires {$a} minutes of game time';
 $string['requires_treasurehunt'] = 'Requires progress in Treasurehunt';
+$string['returnlinktext'] = 'Once finished this, you may want to return to <a href="{$a->returnlink}"><img src="{$a->icon}" alt="Treasurehunt icon"/>Treasurehunt "{$a->treasurehuntname}"</a> activity.';
 $string['select_stage'] = 'Select stage';
 $string['select_treasurehunt'] = 'Select Treasurehunt';
 $string['stage'] = 'Stage';
