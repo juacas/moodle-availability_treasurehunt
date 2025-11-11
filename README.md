@@ -13,8 +13,10 @@ See [https://moodle.org/plugins/mod_treasurehunt](https://moodle.org/plugins/mod
 - **Return link**: When restoring the availability condition, check the description text of the activities and update the return link to restored treasurehunt activity.
 
 ## Change log
-- v1.0.4 - Update return links after restoration.
-
+- v1.0.4 - Update return links in activities descriptions after restoration.
+- v1.0.3 - Improve ajax calls and services.
+- v1.0.2 - Implement privacy API. Minor fixes.
+- v1.0.0 - Initial release.
 
 ## Installation
 
