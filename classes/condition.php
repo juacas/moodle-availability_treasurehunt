@@ -110,6 +110,10 @@ class condition extends \core_availability\condition {
         $course = $info->get_course();
         // Get user attempts.
         $treasurehunt = $this->get_treasurehunt_instance();
+        if (!$treasurehunt) {
+            // Treasurehunt does not exist.
+            return false;
+        }
         try {
             $userdata = treasurehunt_get_user_group_and_road($userid, $treasurehunt, false);
 
