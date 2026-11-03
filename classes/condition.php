@@ -147,6 +147,12 @@ class condition extends \core_availability\condition {
                     break;
 
                 case self::TYPE_CURRENT_STAGE:
+                    // A missing or deleted stage is a configuration error and defaults to false.
+                    $stage = $this->stageid > 0 ? $this->get_stage($this->stageid) : null;
+                    if (!$stage || (int)$stage->treasurehuntid !== (int)$this->treasurehuntid) {
+                        $available = false;
+                        break;
+                    }
                     // Get last solved stage.
                     $lastsolved = treasurehunt_query_last_successful_attempt($userid, $groupid, $roadid);
                     if ($lastsolved) {
@@ -207,6 +213,22 @@ class condition extends \core_availability\condition {
 
             case self::TYPE_CURRENT_STAGE:
                 $stage = $this->get_stage($this->stageid);
+                if (!$stage || (int)$stage->treasurehuntid !== (int)$this->treasurehuntid) {
+                    $arguments = ['name' => $name];
+                    if (has_capability('moodle/course:manageactivities', $info->get_context())) {
+                        $description = \html_writer::div(
+                            get_string('missing_stage_condition_teacher', 'availability_treasurehunt', $arguments),
+                            'alert alert-warning py-1 px-2'
+                        );
+                    } else {
+                        $description = get_string(
+                            'missing_stage_condition_student',
+                            'availability_treasurehunt',
+                            $arguments
+                        );
+                    }
+                    return $this->description_callback([$description]);
+                }
                 $description = get_string(
                     'requires_current_stage',
                     'availability_treasurehunt',
